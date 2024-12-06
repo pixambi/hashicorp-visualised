@@ -10,7 +10,8 @@ import (
 
 type RaftScene struct {
 	scenes.BaseScene
-	nodes [3]*entities.VaultEntity
+	nodes           [3]*entities.VaultEntity
+	electionStarted bool
 }
 
 func NewRaftScene() *RaftScene {
@@ -20,48 +21,67 @@ func NewRaftScene() *RaftScene {
 func (s *RaftScene) Init() {
 	logoSize := float32(100)
 	radius := float32(200) // Distance from center to each node
+	numNodes := 3
 
 	// Calculate center of screen
 	centerX := float32(rl.GetScreenWidth()) / 2
 	centerY := float32(rl.GetScreenHeight()) / 2
 
 	// Create three Vault entities
-	for i := 0; i < 3; i++ {
-		s.nodes[i] = entities.NewVaultEntity(logoSize)
+	for i := 0; i < numNodes; i++ {
+		s.nodes[i] = entities.NewVaultEntity(logoSize, numNodes)
 
 		// Calculate position using trigonometry
-		// 2π/3 = 120 degrees, offset by -90 degrees (-π/2) to start at top
 		angle := float32(2*math.Pi*float64(i)/3 - math.Pi/2)
 		x := centerX + float32(math.Cos(float64(angle)))*radius
 		y := centerY + float32(math.Sin(float64(angle)))*radius
 
 		s.nodes[i].MoveTo(x, y)
-
-		// Set initial labels
-		switch i {
-		case 0:
-			s.nodes[i].SetLabel("Follower")
-			s.nodes[i].SetState("FOLLOWER")
-		case 1:
-			s.nodes[i].SetLabel("Follower")
-			s.nodes[i].SetState("FOLLOWER")
-		case 2:
-			s.nodes[i].SetLabel("Follower")
-			s.nodes[i].SetState("FOLLOWER")
-		}
+		s.nodes[i].SetLabel("Candidate")
+		s.nodes[i].SetState(entities.Candidate)
 	}
 }
 
 func (s *RaftScene) Update() {
+	// Start the election process if it hasn't started
+	if !s.electionStarted {
+		s.startElection()
+		s.electionStarted = true
+	}
+
+	// Update all nodes
 	for _, node := range s.nodes {
 		node.Update()
 	}
 }
 
-func (s *RaftScene) Draw() {
-	// Draw connecting lines first (behind the nodes)
+func (s *RaftScene) startElection() {
+	// Each node sends votes to others
+	for i, sender := range s.nodes {
+		for j, receiver := range s.nodes {
+			if i != j { // Don't send vote to self
+				sender.SendVoteTo(receiver)
+			}
+		}
+	}
+}
 
-	// Draw all nodes
+func (s *RaftScene) Draw() {
+	// Draw connecting lines between nodes
+	for i := 0; i < len(s.nodes); i++ {
+		for j := i + 1; j < len(s.nodes); j++ {
+			pos1 := s.nodes[i].GetPosition()
+			pos2 := s.nodes[j].GetPosition()
+			rl.DrawLineV(pos1, pos2, rl.Gray)
+		}
+	}
+
+	// Draw all votes
+	for _, node := range s.nodes {
+		node.DrawVotes()
+	}
+
+	// Draw all nodes (on top of votes and lines)
 	for _, node := range s.nodes {
 		node.Draw()
 	}
