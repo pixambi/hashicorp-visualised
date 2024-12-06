@@ -1,18 +1,16 @@
 package raft
 
 import (
-	"math"
-
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/pixambi/hashicorp-visualised/core"
 	"github.com/pixambi/hashicorp-visualised/scenes"
+	"github.com/pixambi/hashicorp-visualised/shapes"
 )
 
 type LogoScene struct {
 	scenes.BaseScene
-	logo       *core.DoubleSquare
-	movingLogo *core.DoubleSquare
-	time       float32
+	leftLogo   *shapes.VaultLogo
+	middleLogo *shapes.VaultLogo
+	rightLogo  *shapes.VaultLogo
 }
 
 func NewLogoScene() *LogoScene {
@@ -20,28 +18,33 @@ func NewLogoScene() *LogoScene {
 }
 
 func (s *LogoScene) Init() {
-	// Create a static logo
-	s.logo = core.NewDoubleSquare(100, rl.Red)
-	s.logo.MoveTo(100, 100)
+	logoSize := float32(100)
+	spacing := float32(200) // Space between logos
 
-	// Create a moving logo
-	s.movingLogo = core.NewDoubleSquare(50, rl.Orange)
-	s.time = 0
+	// Calculate starting X position to center the group of logos
+	startX := float32(rl.GetScreenWidth())/2 - (spacing)
+	centerY := float32(rl.GetScreenHeight())/2 - logoSize/2
+
+	// Create three logos and position them
+	s.leftLogo = shapes.NewVaultLogo(logoSize)
+	s.middleLogo = shapes.NewVaultLogo(logoSize)
+	s.rightLogo = shapes.NewVaultLogo(logoSize)
+
+	// Position logos in a row
+	s.leftLogo.MoveTo(startX, centerY)
+	s.middleLogo.MoveTo(startX+spacing, centerY)
+	s.rightLogo.MoveTo(startX+spacing*2, centerY)
 }
 
 func (s *LogoScene) Update() {
-	s.time += rl.GetFrameTime()
-
-	// Make the moving logo follow a circular path
-	x := float32(400 + 100*math.Cos(float64(s.time)))
-	y := float32(300 + 100*math.Sin(float64(s.time)))
-	s.movingLogo.MoveTo(x, y)
+	// No updates needed for stationary logos
 }
 
 func (s *LogoScene) Draw() {
-	// Draw both logos
-	s.logo.Draw()
-	s.movingLogo.Draw()
+	// Draw all three logos
+	s.leftLogo.Draw()
+	s.middleLogo.Draw()
+	s.rightLogo.Draw()
 }
 
 func (s *LogoScene) Unload() {
