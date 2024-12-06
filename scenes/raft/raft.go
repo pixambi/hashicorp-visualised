@@ -1,52 +1,72 @@
 package raft
 
 import (
+	"math"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/pixambi/hashicorp-visualised/entities"
 	"github.com/pixambi/hashicorp-visualised/scenes"
-	"github.com/pixambi/hashicorp-visualised/shapes"
 )
 
-type LogoScene struct {
+type RaftScene struct {
 	scenes.BaseScene
-	leftLogo   *shapes.VaultLogo
-	middleLogo *shapes.VaultLogo
-	rightLogo  *shapes.VaultLogo
+	nodes [3]*entities.VaultEntity
 }
 
-func NewLogoScene() *LogoScene {
-	return &LogoScene{}
+func NewRaftScene() *RaftScene {
+	return &RaftScene{}
 }
 
-func (s *LogoScene) Init() {
+func (s *RaftScene) Init() {
 	logoSize := float32(100)
-	spacing := float32(200) // Space between logos
+	radius := float32(200) // Distance from center to each node
 
-	// Calculate starting X position to center the group of logos
-	startX := float32(rl.GetScreenWidth())/2 - (spacing)
-	centerY := float32(rl.GetScreenHeight())/2 - logoSize/2
+	// Calculate center of screen
+	centerX := float32(rl.GetScreenWidth()) / 2
+	centerY := float32(rl.GetScreenHeight()) / 2
 
-	// Create three logos and position them
-	s.leftLogo = shapes.NewVaultLogo(logoSize)
-	s.middleLogo = shapes.NewVaultLogo(logoSize)
-	s.rightLogo = shapes.NewVaultLogo(logoSize)
+	// Create three Vault entities
+	for i := 0; i < 3; i++ {
+		s.nodes[i] = entities.NewVaultEntity(logoSize)
 
-	// Position logos in a row
-	s.leftLogo.MoveTo(startX, centerY)
-	s.middleLogo.MoveTo(startX+spacing, centerY)
-	s.rightLogo.MoveTo(startX+spacing*2, centerY)
+		// Calculate position using trigonometry
+		// 2π/3 = 120 degrees, offset by -90 degrees (-π/2) to start at top
+		angle := float32(2*math.Pi*float64(i)/3 - math.Pi/2)
+		x := centerX + float32(math.Cos(float64(angle)))*radius
+		y := centerY + float32(math.Sin(float64(angle)))*radius
+
+		s.nodes[i].MoveTo(x, y)
+
+		// Set initial labels
+		switch i {
+		case 0:
+			s.nodes[i].SetLabel("Follower")
+			s.nodes[i].SetState("FOLLOWER")
+		case 1:
+			s.nodes[i].SetLabel("Follower")
+			s.nodes[i].SetState("FOLLOWER")
+		case 2:
+			s.nodes[i].SetLabel("Follower")
+			s.nodes[i].SetState("FOLLOWER")
+		}
+	}
 }
 
-func (s *LogoScene) Update() {
-	// No updates needed for stationary logos
+func (s *RaftScene) Update() {
+	for _, node := range s.nodes {
+		node.Update()
+	}
 }
 
-func (s *LogoScene) Draw() {
-	// Draw all three logos
-	s.leftLogo.Draw()
-	s.middleLogo.Draw()
-	s.rightLogo.Draw()
+func (s *RaftScene) Draw() {
+	// Draw connecting lines first (behind the nodes)
+
+	// Draw all nodes
+	for _, node := range s.nodes {
+		node.Draw()
+	}
 }
 
-func (s *LogoScene) Unload() {
+func (s *RaftScene) Unload() {
 	// Clean up any resources if needed
 }

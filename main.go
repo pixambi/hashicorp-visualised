@@ -19,7 +19,7 @@ func main() {
 	rl.SetTargetFPS(fps)
 
 	manager := core.NewSceneManager()
-	manager.RegisterScene("circle", raft.NewLogoScene())
+	manager.RegisterScene("circle", raft.NewRaftScene())
 	manager.SwitchTo("circle")
 
 	for !rl.WindowShouldClose() {
