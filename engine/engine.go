@@ -36,8 +36,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	config.Current.UpdateWindowSize(outsideWidth, outsideHeight)
-	return config.Current.DesignWidth, config.Current.DesignHeight
+	return config.Current.Width, config.Current.Height
 }
 
 // images
@@ -60,9 +59,9 @@ func (g *Game) AddEntity(e entity.Entity) {
 	g.world.AddEntity(e)
 }
 
-func (g *Game) CreateEntity(imageName string, x, y float64) entity.Entity {
+func (g *Game) CreateEntity(imageName string, x, y float64, width, height int) entity.Entity {
 	img := g.GetImage(imageName)
-	e := entity.NewBaseEntity(img)
+	e := entity.NewBaseEntity(img, width, height)
 	e.SetPosition(x, y)
 	return e
 }

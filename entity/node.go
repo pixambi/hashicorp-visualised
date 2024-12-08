@@ -2,7 +2,6 @@ package entity
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/pixambi/hashicorp-visualised/config"
 )
 
 type Entity interface {
@@ -10,18 +9,35 @@ type Entity interface {
 	Draw(screen *ebiten.Image)
 	GetPosition() (float64, float64)
 	SetPosition(x float64, y float64)
+	SetScale(scale float64)
 }
 
 type BaseEntity struct {
 	x, y    float64
 	image   *ebiten.Image
+	width   int
+	height  int
 	scale   float64
 	visible bool
+	angle   float64
+	op      ebiten.DrawImageOptions
 }
 
-func NewBaseEntity(img *ebiten.Image) *BaseEntity {
+func NewBaseEntity(img *ebiten.Image, width, height int) *BaseEntity {
+	scaledImg := ebiten.NewImage(width, height)
+
+	op := &ebiten.DrawImageOptions{}
+	origWidth, origHeight := img.Bounds().Dx(), img.Bounds().Dy()
+	scaleX := float64(width) / float64(origWidth)
+	scaleY := float64(height) / float64(origHeight)
+
+	op.GeoM.Scale(scaleX, scaleY)
+	scaledImg.DrawImage(img, op)
+
 	return &BaseEntity{
-		image:   img,
+		image:   scaledImg,
+		width:   width,
+		height:  height,
 		scale:   1.0,
 		visible: true,
 	}
@@ -35,23 +51,17 @@ func (e *BaseEntity) Draw(screen *ebiten.Image) {
 	if !e.visible || e.image == nil {
 		return
 	}
+	e.op = ebiten.DrawImageOptions{}
+	e.op.GeoM.Scale(e.scale, e.scale)
 
-	op := &ebiten.DrawImageOptions{}
+	if e.angle != 0 {
+		e.op.GeoM.Rotate(e.angle)
+	}
 
-	// Get image dimensions
-	w, h := float64(e.image.Bounds().Dx()), float64(e.image.Bounds().Dy())
+	e.op.GeoM.Translate(-float64(e.width)/2, -float64(e.height)/2)
+	e.op.GeoM.Translate(e.x, e.y)
 
-	// Scale the image
-	op.GeoM.Scale(e.scale, e.scale)
-
-	// Get scaled screen position
-	screenX, screenY := config.Current.ScalePosition(e.x, e.y)
-
-	// Center the image at its position
-	op.GeoM.Translate(-w*e.scale/2, -h*e.scale/2)
-	op.GeoM.Translate(screenX, screenY)
-
-	screen.DrawImage(e.image, op)
+	screen.DrawImage(e.image, &e.op)
 }
 
 func (e *BaseEntity) GetPosition() (float64, float64) {
@@ -67,6 +77,18 @@ func (e *BaseEntity) SetScale(scale float64) {
 	e.scale = scale
 }
 
+func (e *BaseEntity) SetRotation(angle float64) {
+	e.angle = angle
+}
+
 func (e *BaseEntity) SetVisible(visible bool) {
 	e.visible = visible
+}
+
+func (e *BaseEntity) GetSize() (width, height int) {
+	return e.width, e.height
+}
+
+func (e *BaseEntity) GetImage() *ebiten.Image {
+	return e.image
 }
