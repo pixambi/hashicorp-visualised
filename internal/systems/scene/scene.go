@@ -7,6 +7,10 @@ import (
 	"github.com/yohamta/donburi/ecs"
 )
 
+const (
+	LayerDefault ecs.LayerID = 0
+)
+
 type ChangeSignal struct {
 	Target string
 }

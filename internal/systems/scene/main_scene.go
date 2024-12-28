@@ -12,10 +12,6 @@ import (
 	"github.com/yohamta/donburi/filter"
 )
 
-const (
-	LayerDefault ecs.LayerID = 0
-)
-
 type MainScene struct {
 	BaseScene
 	nodeManager *nodes.NodeManager
@@ -41,7 +37,7 @@ func (s *MainScene) Enter(world donburi.World, ecs *ecs.ECS) {
 
 func (s *MainScene) Update(world donburi.World) error {
 	if ebiten.IsKeyPressed(ebiten.Key1) {
-		return ChangeSignal{Target: "scene1"}
+		return ChangeSignal{Target: "test"}
 	}
 	if ebiten.IsKeyPressed(ebiten.Key2) {
 		return ChangeSignal{Target: "scene2"}

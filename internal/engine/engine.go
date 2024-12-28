@@ -52,6 +52,7 @@ func NewEngine(config Config) *Engine {
 
 func (e *Engine) registerScenes() {
 	e.sceneManager.RegisterScene("main", scene.NewMainScene())
+	e.sceneManager.RegisterScene("test", scene.NewTestScene())
 }
 
 func (e *Engine) Update() error {
