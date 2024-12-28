@@ -1,42 +1,69 @@
 package engine
 
 import (
+	"errors"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pixambi/hashicorp-visualised.git/internal/systems/nodes"
-	"github.com/pixambi/hashicorp-visualised.git/internal/systems/sprite"
+	"github.com/pixambi/hashicorp-visualised.git/internal/systems/scene"
 	"github.com/yohamta/donburi"
 	"github.com/yohamta/donburi/ecs"
 )
 
-var vault = sprite.LoadImage("../internal/assets/vault-logo.png")
-
 type Engine struct {
-	world       donburi.World
-	ecs         *ecs.ECS
-	nodeManager *nodes.NodeManager
+	world        donburi.World
+	ecs          *ecs.ECS
+	sceneManager *scene.Manager
+	nodeManager  *nodes.NodeManager
+	screenWidth  int
+	screenHeight int
+}
+type Config struct {
+	ScreenWidth  int
+	ScreenHeight int
+	ResizingMode ebiten.WindowResizingModeType
+	InitialScene string
 }
 
-func NewEngine() *Engine {
+func NewEngine(config Config) *Engine {
 	world := donburi.NewWorld()
 	ecsInstance := ecs.NewECS(world)
 
 	engine := &Engine{
-		world:       world,
-		ecs:         ecsInstance,
-		nodeManager: nodes.NewNodeManager(world),
+		world:        world,
+		ecs:          ecsInstance,
+		sceneManager: scene.NewManager(world, ecsInstance),
+		nodeManager:  nodes.NewNodeManager(world),
+		screenWidth:  config.ScreenWidth,
+		screenHeight: config.ScreenHeight,
 	}
 
-	//Add Systems
-	ecsInstance.AddSystem(engine.updateNodes)
-	//Add Renderers
-	ecsInstance.AddRenderer(ecs.LayerDefault, engine.drawNodes)
+	engine.registerScenes()
+
+	if err := engine.sceneManager.SwitchScene(config.InitialScene); err != nil {
+		panic(err)
+	}
+
+	ebiten.SetWindowSize(config.ScreenWidth, config.ScreenHeight)
+	ebiten.SetWindowResizingMode(config.ResizingMode)
 
 	return engine
 
 }
 
+func (e *Engine) registerScenes() {
+	e.sceneManager.RegisterScene("main", scene.NewMainScene())
+}
+
 func (e *Engine) Update() error {
-	e.ecs.Update()
+	if err := e.sceneManager.Update(e.world); err != nil {
+		var signal scene.ChangeSignal
+		switch {
+		case errors.As(err, &signal):
+			return e.sceneManager.SwitchScene(signal.Target)
+		default:
+			return err
+		}
+	}
 	return nil
 }
 

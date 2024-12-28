@@ -3,6 +3,7 @@ package nodes
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/pixambi/hashicorp-visualised.git/internal/components"
+	"github.com/pixambi/hashicorp-visualised.git/internal/systems/sprite"
 	"github.com/yohamta/donburi"
 	dmath "github.com/yohamta/donburi/features/math"
 	"github.com/yohamta/donburi/features/transform"
@@ -41,12 +42,12 @@ func (nm *NodeManager) CreateNode(id, label string, pos dmath.Vec2, imagePath st
 	transform.SetWorldScale(entry, dmath.Vec2{X: 1, Y: 1})
 	transform.SetWorldRotation(entry, 0)
 
-	if img, ok := nm.images[imagePath]; ok {
-		components.Sprite.SetValue(entry, components.SpriteData{
-			Image: img,
-			Scale: 1.0,
-		})
-	}
+	img := nm.loadImage(imagePath)
+	components.Sprite.SetValue(entry, components.SpriteData{
+		Image: img,
+		Scale: 1.0,
+	})
+
 	return entity
 }
 
@@ -121,4 +122,13 @@ func (nm *NodeManager) GetChildren(entity donburi.Entity) []*donburi.Entry {
 func (nm *NodeManager) GetParent(entity donburi.Entity) (*donburi.Entry, bool) {
 	entry := nm.world.Entry(entity)
 	return transform.GetParent(entry)
+}
+
+func (nm *NodeManager) loadImage(imagePath string) *ebiten.Image {
+	if img, exists := nm.images[imagePath]; exists {
+		return img
+	}
+	img := sprite.LoadImage(imagePath)
+	nm.images[imagePath] = img
+	return img
 }

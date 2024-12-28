@@ -1,14 +1,14 @@
 package sprite
 
 import (
-	"github.com/ebitengine/gomobile/asset"
 	"github.com/hajimehoshi/ebiten/v2"
 	"image"
 	_ "image/png"
+	"os"
 )
 
 func LoadImage(path string) *ebiten.Image {
-	f, err := asset.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}
@@ -18,5 +18,6 @@ func LoadImage(path string) *ebiten.Image {
 	if err != nil {
 		panic(err)
 	}
+
 	return ebiten.NewImageFromImage(img)
 }
